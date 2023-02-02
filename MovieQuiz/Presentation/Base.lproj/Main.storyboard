@@ -120,16 +120,23 @@
                                     </stackView>
                                 </subviews>
                             </stackView>
+                            <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" style="medium" translatesAutoresizingMaskIntoConstraints="NO" id="fCo-Cb-CpC">
+                                <rect key="frame" x="197" y="438" width="20" height="20"/>
+                                <color key="color" name="green"/>
+                            </activityIndicatorView>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                         <color key="backgroundColor" name="black"/>
                         <constraints>
                             <constraint firstItem="6Tk-OE-BBY" firstAttribute="top" secondItem="cxX-5J-9KN" secondAttribute="top" constant="10" id="VLh-SL-qfC"/>
+                            <constraint firstItem="fCo-Cb-CpC" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="bQc-Op-CnD"/>
                             <constraint firstItem="cxX-5J-9KN" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="20" id="iwO-JP-nUI"/>
+                            <constraint firstItem="fCo-Cb-CpC" firstAttribute="centerY" secondItem="8bC-Xf-vdC" secondAttribute="centerY" id="oUr-0Z-PB8"/>
                             <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="cxX-5J-9KN" secondAttribute="trailing" constant="20" id="vjq-EY-FYJ"/>
                         </constraints>
                     </view>
                     <connections>
+                        <outlet property="activityIndicator" destination="fCo-Cb-CpC" id="33d-qn-aq3"/>
                         <outlet property="counterLabel" destination="4Tr-OE-JOW" id="h5J-S6-nyD"/>
                         <outlet property="imageView" destination="Ubf-Qa-ZYp" id="HuS-sK-b0r"/>
                         <outlet property="noButton" destination="wtL-26-3f3" id="q2Q-oS-k5c"/>
@@ -145,6 +152,9 @@
     <resources>
         <namedColor name="black">
             <color red="0.10199999809265137" green="0.10599999874830246" blue="0.13300000131130219" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
+        <namedColor name="green">
+            <color red="0.37599998712539673" green="0.76099997758865356" blue="0.55699998140335083" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </namedColor>
         <namedColor name="white">
             <color red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
