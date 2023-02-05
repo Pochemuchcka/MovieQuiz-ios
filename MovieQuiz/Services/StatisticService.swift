@@ -72,13 +72,18 @@ final class StatisticServiceImplementation: StatisticService {
             }
     }
     func store(correct count: Int, total amount: Int) {
-             totalAccuracy = Double(count) / Double(amount) * 100
-             gamesCount += 1
+        if gamesCount != 0{
+            totalAccuracy = (Double(totalAccuracy) * Double(gamesCount) + (Double(count) / Double(amount))) / Double(gamesCount + 1)
+        }
+        else{
+             totalAccuracy = Double(count) / Double(amount)
+        }
+        gamesCount += 1
 
-             let currentGame = GameRecord(correct: count, total: amount, date: Date())
-             if bestGame < currentGame {
-                 bestGame = currentGame
-             }
+        let currentGame = GameRecord(correct: count, total: amount, date: Date())
+        if bestGame < currentGame {
+            bestGame = currentGame
+        }
     }
 }
 

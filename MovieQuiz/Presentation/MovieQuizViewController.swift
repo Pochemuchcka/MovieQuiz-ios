@@ -36,6 +36,7 @@ final class MovieQuizViewController: UIViewController,QuestionFactoryDelegate,Al
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        imageView.layer.cornerRadius = 20
         questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
         questionFactory?.loadData()
         alertPresenter = AlertPresenter(delegate: self)
@@ -138,6 +139,7 @@ final class MovieQuizViewController: UIViewController,QuestionFactoryDelegate,Al
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
             guard let self = self else {return}
             self.imageView.layer.borderWidth = 0
+            self.imageView.layer.contents = 0
             self.showNextQuestionOrResults()
             
             self.yesButton.isEnabled = true
@@ -148,9 +150,9 @@ final class MovieQuizViewController: UIViewController,QuestionFactoryDelegate,Al
 
     func showNextQuestionOrResults() {
         if currentQuestionIndex == questionsAmount - 1 {
-            
             guard let statisticService = statisticService else { return }
             statisticService.store(correct: correctAnswers, total: questionsAmount)
+            
             let bestGame = statisticService.bestGame
             let bestGameStats = "\(bestGame.correct)/\(bestGame.total)"
 
@@ -159,7 +161,7 @@ final class MovieQuizViewController: UIViewController,QuestionFactoryDelegate,Al
                     Ваш результат: \(correctAnswers)/\(questionsAmount)
                     Кол-во сыгранных квизов: \(statisticService.gamesCount)
                     Рекорд: \(bestGameStats) \(bestGame.date.dateTimeString)
-                    Средняя точность: \(String(format: "%.2f", statisticService.totalAccuracy) + "%")
+                    Средняя точность: \(String(format: "%.2f", statisticService.totalAccuracy * 100) + "%")
             """
             
             let vieModel = QuizResultsViewModel(title: "Раунд окончен!", text: text, buttonText: "Cыграть ещё раз!")
