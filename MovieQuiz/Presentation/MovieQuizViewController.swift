@@ -11,8 +11,8 @@ final class MovieQuizViewController: UIViewController  {
     @IBOutlet var imageView: UIImageView!
     @IBOutlet private var textLabel: UILabel!
     @IBOutlet private var counterLabel: UILabel!
-    @IBOutlet private var yesButton: UIButton!
-    @IBOutlet private var noButton: UIButton!
+    @IBOutlet var yesButton: UIButton!
+    @IBOutlet var noButton: UIButton!
     @IBOutlet private var activityIndicator: UIActivityIndicatorView!
     
     private var presenter: MovieQuizPresenter!
