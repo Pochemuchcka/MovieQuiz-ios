@@ -1,6 +1,6 @@
 import UIKit
 
-final class MovieQuizViewController: UIViewController,QuestionFactoryDelegate  {
+final class MovieQuizViewController: UIViewController  {
     // MARK: - Lifecycle
     
     @IBAction private func yesButtonClicked(_ sender: UIButton) {            presenter.yesButtonClicked()
@@ -15,49 +15,27 @@ final class MovieQuizViewController: UIViewController,QuestionFactoryDelegate  {
     @IBOutlet private var noButton: UIButton!
     @IBOutlet private var activityIndicator: UIActivityIndicatorView!
     
-    private var correctAnswers: Int = 0
-    private var questionFactory: QuestionFactoryProtocol?
+    private var presenter: MovieQuizPresenter!
     private var statisticService: StatisticService?
-    private let presenter = MovieQuizPresenter()
     
     override func viewDidLoad() {
         super.viewDidLoad()
         imageView.layer.cornerRadius = 20
-        questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
-        questionFactory?.loadData()
+        presenter = MovieQuizPresenter(viewController: self)
         statisticService = StatisticServiceImplementation()
         showLoadingIndicator()
-        presenter.viewController = self
-
-    }
-    
-    
-    
-    // MARK: - QuestionFactoryDelegate
-    
-    func didReceiveNextQuestion(question: QuizQuestion?) {
-        presenter.didReceiveNextQuestion(question: question)
-    }
-    
-    func didLoadDataFromServer() {
-        activityIndicator.isHidden = true
-        questionFactory?.requestNextQuestion()
     }
 
-    func didFailToLoadData(with error: Error) {
-        showNetworkError(message: error.localizedDescription)
-    }
-    
-    private func showLoadingIndicator(){
+    func showLoadingIndicator(){
         activityIndicator.isHidden = false
         activityIndicator.startAnimating()
     }
     
-    private func hideLoadingIndicator(){
+    func hideLoadingIndicator(){
         activityIndicator.isHidden = true
     }
     
-    private func showNetworkError(message: String) {
+    func showNetworkError(message: String) {
         hideLoadingIndicator()
         
         let alert = UIAlertController(
@@ -69,10 +47,7 @@ final class MovieQuizViewController: UIViewController,QuestionFactoryDelegate  {
                                    style: .default) { [weak self] _ in
             guard let self = self else { return }
 
-            self.presenter.resetQuestionIndex()
-            self.correctAnswers = 0
-
-            self.questionFactory?.requestNextQuestion()
+            self.presenter.restartGame()
         }
 
         alert.addAction(action)
@@ -87,12 +62,12 @@ final class MovieQuizViewController: UIViewController,QuestionFactoryDelegate  {
     func show(quiz result: QuizResultsViewModel) {
         var message = result.text
         if let statisticService = statisticService {
-            statisticService.store(correct: correctAnswers, total: presenter.questionsAmount)
+            statisticService.store(correct: presenter.correctAnswers, total: presenter.questionsAmount)
 
             let bestGame = statisticService.bestGame
 
             let totalPlaysCountLine = "Количество сыгранных квизов: \(statisticService.gamesCount)"
-            let currentGameResultLine = "Ваш результат: \(correctAnswers)\\\(presenter.questionsAmount)"
+            let currentGameResultLine = "Ваш результат: \(presenter.correctAnswers)\\\(presenter.questionsAmount)"
             let bestGameInfoLine = "Рекорд: \(bestGame.correct)\\\(bestGame.total)"
             + " (\(bestGame.date.dateTimeString))"
             let averageAccuracyLine = "Средняя точность: \(String(format: "%.2f", statisticService.totalAccuracy * 100))%"
@@ -112,10 +87,8 @@ final class MovieQuizViewController: UIViewController,QuestionFactoryDelegate  {
         let action = UIAlertAction(title: result.buttonText, style: .default) { [weak self] _ in
             guard let self = self else { return }
 
-            self.presenter.resetQuestionIndex()
-            self.correctAnswers = 0
+            self.presenter.restartGame()
             self.imageView.layer.borderWidth = 0
-            self.questionFactory?.requestNextQuestion()
         }
 
         alert.addAction(action)
@@ -125,9 +98,7 @@ final class MovieQuizViewController: UIViewController,QuestionFactoryDelegate  {
     }
     
     func showAnswerResult(isCorrect: Bool) {
-        if isCorrect {
-            correctAnswers += 1
-        }
+        presenter.didAnswer(isCorrectAnswer: isCorrect)
         switchButton()
         imageView.layer.cornerRadius = 20
         imageView.layer.masksToBounds = true
@@ -142,8 +113,6 @@ final class MovieQuizViewController: UIViewController,QuestionFactoryDelegate  {
             self.imageView.layer.borderWidth = 0
             self.imageView.layer.contents = 0
             self.presenter.showNextQuestionOrResults()
-            self.presenter.correctAnswers = self.correctAnswers
-            self.presenter.questionFactory = self.questionFactory
             self.yesButton.isEnabled = true
             self.noButton.isEnabled = true
         }
