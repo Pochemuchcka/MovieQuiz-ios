@@ -22,8 +22,6 @@ final class MovieQuizViewController: UIViewController  {
         super.viewDidLoad()
         imageView.layer.cornerRadius = 20
         presenter = MovieQuizPresenter(viewController: self)
-        statisticService = StatisticServiceImplementation()
-        showLoadingIndicator()
     }
 
     func showLoadingIndicator(){
@@ -60,24 +58,7 @@ final class MovieQuizViewController: UIViewController  {
     }
     
     func show(quiz result: QuizResultsViewModel) {
-        var message = result.text
-        if let statisticService = statisticService {
-            statisticService.store(correct: presenter.correctAnswers, total: presenter.questionsAmount)
-
-            let bestGame = statisticService.bestGame
-
-            let totalPlaysCountLine = "Количество сыгранных квизов: \(statisticService.gamesCount)"
-            let currentGameResultLine = "Ваш результат: \(presenter.correctAnswers)\\\(presenter.questionsAmount)"
-            let bestGameInfoLine = "Рекорд: \(bestGame.correct)\\\(bestGame.total)"
-            + " (\(bestGame.date.dateTimeString))"
-            let averageAccuracyLine = "Средняя точность: \(String(format: "%.2f", statisticService.totalAccuracy * 100))%"
-
-            let resultMessage = [
-                currentGameResultLine, totalPlaysCountLine, bestGameInfoLine, averageAccuracyLine
-            ].joined(separator: "\n")
-
-            message = resultMessage
-        }
+        let message = presenter.makeResultsMessage()
         
         let alert = UIAlertController(
             title: result.title,
@@ -97,30 +78,9 @@ final class MovieQuizViewController: UIViewController  {
         
     }
     
-    func showAnswerResult(isCorrect: Bool) {
-        presenter.didAnswer(isCorrectAnswer: isCorrect)
-        switchButton()
-        imageView.layer.cornerRadius = 20
+    func highlightImageBorder(isCorrectAnswer: Bool) {
         imageView.layer.masksToBounds = true
         imageView.layer.borderWidth = 8
-        imageView.layer.borderColor = isCorrect ? UIColor.ypGreen.cgColor : UIColor.ypRed.cgColor
-        
-        yesButton.isEnabled = false
-        noButton.isEnabled = false
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
-            guard let self = self else {return}
-            self.imageView.layer.borderWidth = 0
-            self.imageView.layer.contents = 0
-            self.presenter.showNextQuestionOrResults()
-            self.yesButton.isEnabled = true
-            self.noButton.isEnabled = true
-        }
-        
-    }
-    
-    private func switchButton()  {
-        noButton.isEnabled = true
-        yesButton.isEnabled = true
+        imageView.layer.borderColor = isCorrectAnswer ? UIColor.ypGreen.cgColor :UIColor.ypRed.cgColor
     }
 }
