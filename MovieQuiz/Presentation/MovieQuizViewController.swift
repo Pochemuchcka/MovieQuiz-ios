@@ -1,6 +1,6 @@
 import UIKit
 
-final class MovieQuizViewController: UIViewController  {
+final class MovieQuizViewController: UIViewController, MovieQuizViewControllerProtocol {
     // MARK: - Lifecycle
     
     @IBAction private func yesButtonClicked(_ sender: UIButton) {            presenter.yesButtonClicked()
@@ -8,11 +8,11 @@ final class MovieQuizViewController: UIViewController  {
     
     @IBAction private func noButtonClicked (_ sender: UIButton){        presenter.noButtonClicked()
     }
-    @IBOutlet var imageView: UIImageView!
+    @IBOutlet private var imageView: UIImageView!
     @IBOutlet private var textLabel: UILabel!
     @IBOutlet private var counterLabel: UILabel!
-    @IBOutlet var yesButton: UIButton!
-    @IBOutlet var noButton: UIButton!
+    @IBOutlet private var yesButton: UIButton!
+    @IBOutlet private var noButton: UIButton!
     @IBOutlet private var activityIndicator: UIActivityIndicatorView!
     
     private var presenter: MovieQuizPresenter!
@@ -23,7 +23,7 @@ final class MovieQuizViewController: UIViewController  {
         imageView.layer.cornerRadius = 20
         presenter = MovieQuizPresenter(viewController: self)
     }
-
+    
     func showLoadingIndicator(){
         activityIndicator.isHidden = false
         activityIndicator.startAnimating()
@@ -40,17 +40,17 @@ final class MovieQuizViewController: UIViewController  {
             title: "Ошибка",
             message: message,
             preferredStyle: .alert)
-
+        
         let action = UIAlertAction(title: "Попробовать еще раз",
                                    style: .default) { [weak self] _ in
             guard let self = self else { return }
-
+            
             self.presenter.restartGame()
         }
-
+        
         alert.addAction(action)
     }
-   
+    
     func show(quiz step: QuizStepViewModel){
         imageView.image = step.image
         textLabel.text = step.question
@@ -64,18 +64,32 @@ final class MovieQuizViewController: UIViewController  {
             title: result.title,
             message: message,
             preferredStyle: .alert)
-
+        
         let action = UIAlertAction(title: result.buttonText, style: .default) { [weak self] _ in
             guard let self = self else { return }
-
+            
             self.presenter.restartGame()
             self.imageView.layer.borderWidth = 0
         }
-
+        
         alert.addAction(action)
-
+        
         self.present(alert, animated: true, completion: nil)
         
+    }
+    
+    func imageBorder() {
+        imageView.layer.borderWidth = 0
+        imageView.layer.contents = 0
+    }
+    func buttonEnableFalse() {
+        yesButton.isEnabled = false
+        noButton.isEnabled = false
+    }
+    
+    func buttonEnableTrue(){
+        yesButton.isEnabled = true
+        noButton.isEnabled = true
     }
     
     func highlightImageBorder(isCorrectAnswer: Bool) {

@@ -11,37 +11,40 @@ import UIKit
 final class MovieQuizPresenter:QuestionFactoryDelegate {
     private let statisticService: StatisticService!
     private var questionFactory: QuestionFactoryProtocol?
-    private weak var viewController: MovieQuizViewController?
+    private weak var viewController: MovieQuizViewControllerProtocol?
     private var currentQuestion: QuizQuestion?
     private let questionsAmount: Int = 10
     private var currentQuestionIndex: Int = 0
     private var correctAnswers: Int = 0
     
-    init(viewController: MovieQuizViewController) {
+    init(viewController: MovieQuizViewControllerProtocol) {
         self.viewController = viewController
         
         statisticService = StatisticServiceImplementation()
         questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
         questionFactory?.loadData()
         viewController.showLoadingIndicator()
+        viewController.imageBorder()
+        viewController.buttonEnableFalse()
+        viewController.buttonEnableTrue()
     }
     // MARK: - QuestionFactoryDelegate
-       
+    
     func didLoadDataFromServer() {
         viewController?.hideLoadingIndicator()
         questionFactory?.requestNextQuestion()
     }
-       
+    
     func didFailToLoadData(with error: Error) {
         let message = error.localizedDescription
         viewController?.showNetworkError(message: message)
     }
-       
-    func didRecieveNextQuestion(question: QuizQuestion?) {
+    
+    private func didRecieveNextQuestion(question: QuizQuestion?) {
         guard let question = question else {
             return
         }
-
+        
         currentQuestion = question
         let viewModel = convert(model: question)
         DispatchQueue.main.async { [weak self] in
@@ -49,17 +52,17 @@ final class MovieQuizPresenter:QuestionFactoryDelegate {
         }
     }
     
-    func isLastQuestion() -> Bool {
+    private func isLastQuestion() -> Bool {
         currentQuestionIndex == questionsAmount - 1
     }
-        
+    
     func restartGame() {
         currentQuestionIndex = 0
         correctAnswers = 0
         questionFactory?.requestNextQuestion()
     }
-        
-    func switchToNextQuestion() {
+    
+    private func switchToNextQuestion() {
         currentQuestionIndex += 1
     }
     
@@ -74,24 +77,24 @@ final class MovieQuizPresenter:QuestionFactoryDelegate {
     func yesButtonClicked() {
         didAnswer(isYes: true)
     }
-        
+    
     func noButtonClicked() {
         didAnswer(isYes: false)
     }
     
-    func didAnswer(isCorrectAnswer: Bool){
+    private func didAnswer(isCorrectAnswer: Bool){
         if isCorrectAnswer {
             correctAnswers += 1
         }
     }
-   private func didAnswer(isYes: Bool) {
+    private func didAnswer(isYes: Bool) {
         guard let currentQuestion = currentQuestion else {
             return
         }
-            
+        
         let givenAnswer = isYes
-            
-       proceedWithAnswer(isCorrect: givenAnswer == currentQuestion.correctAnswer)
+        
+        proceedWithAnswer(isCorrect: givenAnswer == currentQuestion.correctAnswer)
     }
     
     func didReceiveNextQuestion(question: QuizQuestion?) {
@@ -106,14 +109,14 @@ final class MovieQuizPresenter:QuestionFactoryDelegate {
         }
     }
     
-    func proceedToNextQuestionOrResults() {
+    private func proceedToNextQuestionOrResults() {
         if self.isLastQuestion() {
             let text = "Вы ответили на \(correctAnswers) из 10, попробуйте еще раз!"
             
             let vieModel = QuizResultsViewModel(title: "Раунд окончен!", text: text, buttonText: "Cыграть ещё раз!")
             viewController?.show(quiz: vieModel)
         } else {
-            viewController?.imageView.layer.borderWidth = 0
+            viewController?.imageBorder()
             self.switchToNextQuestion()
             questionFactory?.requestNextQuestion()
         }
@@ -121,34 +124,44 @@ final class MovieQuizPresenter:QuestionFactoryDelegate {
     
     func makeResultsMessage() -> String {
         statisticService.store(correct: correctAnswers, total: questionsAmount)
-            
+        
         let bestGame = statisticService.bestGame
-            
+        
         let totalPlaysCountLine = "Количество сыгранных квизов: \(statisticService.gamesCount)"
         let currentGameResultLine = "Ваш результат: \(correctAnswers)\\\(questionsAmount)"
         let bestGameInfoLine = "Рекорд: \(bestGame.correct)\\\(bestGame.total)"
         + " (\(bestGame.date.dateTimeString))"
         let averageAccuracyLine = "Средняя точность: \(String(format: "%.2f",statisticService.totalAccuracy * 100))%"
-            
+        
         let resultMessage = [
             currentGameResultLine, totalPlaysCountLine, bestGameInfoLine, averageAccuracyLine
         ].joined(separator: "\n")
-            
+        
         return resultMessage
     }
     
-    func proceedWithAnswer(isCorrect: Bool) {
+    private func proceedWithAnswer(isCorrect: Bool) {
         didAnswer(isCorrectAnswer: isCorrect)
         viewController?.highlightImageBorder(isCorrectAnswer: isCorrect)
-        viewController?.yesButton.isEnabled = false
-        viewController?.noButton.isEnabled = false
-            
+        viewController?.buttonEnableFalse()
+        
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
             guard let self = self else { return }
-            self.viewController?.imageView.layer.contents = 0
             self.proceedToNextQuestionOrResults()
-            self.viewController?.yesButton.isEnabled = true
-            self.viewController?.noButton.isEnabled = true
+            self.viewController?.buttonEnableTrue()
         }
     }
+}
+
+protocol MovieQuizViewControllerProtocol: AnyObject {
+    func show(quiz step: QuizStepViewModel)
+    func show(quiz result: QuizResultsViewModel)
+    
+    func highlightImageBorder(isCorrectAnswer: Bool)
+    func buttonEnableFalse()
+    func buttonEnableTrue()
+    func showLoadingIndicator()
+    func hideLoadingIndicator()
+    func imageBorder()
+    func showNetworkError(message: String)
 }
